@@ -1,0 +1,846 @@
+
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <set>
+#include <list>
+#include <iomanip>
+#include<vector>
+#include <fstream>
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/video/background_segm.hpp"
+#include "opencv2/video/tracking.hpp"
+#include <chrono> 
+#include <map>
+using namespace std::chrono;
+using namespace cv;
+using namespace std;
+
+struct Person {
+    int id;
+    bool male;
+    bool young;
+    bool pale;
+    bool bigNose;
+    bool attractive;
+
+    bool brownHair;
+    bool blackHair;
+    bool blondeHair;
+    bool greyHair;
+    bool bald;
+
+    bool noBeard;
+    bool mustache;
+    bool fiveOclock;
+    bool goatee;
+
+    bool wavyHair;
+    bool straightHair;
+
+    bool bushyEyebrows;
+    bool archedEyebrows;
+
+    bool bigLips;
+    bool chubby;
+    bool eyeGlasses;
+    bool narrowEyes;
+    bool highCheekbones;
+    bool ovalFace;
+
+    void printPerson() {
+        cout << "male: " << this->male << endl;
+        cout << "young: " << this->young << endl;
+        cout << "pale: " << this->pale << endl;
+        cout << "bigNose: " << this->bigNose << endl;
+        cout << "attractive: " << this->attractive << endl;
+        cout << "brown hair: " << this->brownHair << endl;
+        cout << "black hair: " << this->blackHair << endl;
+        cout << "blonde hair: " << this->blondeHair << endl;
+        cout << "grey hair: " << this->greyHair << endl;
+        cout << "bald: " << this->bald << endl;
+        cout << "no beard: " << this->noBeard << endl;
+        cout << "mustache: " << this->mustache << endl;
+        cout << "fiveOclock: " << this->fiveOclock << endl;
+        cout << "goatee: " << this->goatee << endl;
+        cout << "wavy hair: " << this->wavyHair << endl;
+        cout << "straight hair: " << this->straightHair << endl;
+        cout << "bushy eyebrows: " << this->bushyEyebrows << endl;
+        cout << "arched eyebrows: " << this->archedEyebrows << endl;
+        cout << "big lips: " << this->bigLips << endl;
+        cout << "chubby: " << this->chubby << endl;
+        cout << "glasses: " << this->eyeGlasses << endl;
+    }
+};
+
+struct Sets {
+
+    set<int> all;
+    set<int> male;
+    set<int> young;
+    set<int> pale;
+    set<int> bigNose;
+    set<int> attractive;
+    set<int> brownHair;
+    set<int> blackHair;
+    set<int> blondeHair;
+    set<int> greyHair;
+    set<int> bald;
+    set<int> noBeard;
+    set<int> mustache;
+    set<int> fiveOclock;
+    set<int> goatee;
+    set<int> wavyHair;
+    set<int> straightHair;
+    set<int> bushyEyebrows;
+    set<int> archedEyebrows;
+    set<int> bigLips;
+    set<int> narrowEyes;
+    set<int> highCheekbones;
+    set<int> ovalFace;
+    set<int> chubby;
+    set<int> eyeGlasses;
+};
+
+bool convert(string attribute) {
+    return attribute == "1";
+}
+
+string getAttribute(string line, bool& attribute) {
+    int index = line.find_first_of(',');
+    attribute = convert(line.substr(0, index));
+    return line.substr(index + 1);
+
+}
+
+string skip(string line) {
+    int index = line.find_first_of(',');
+    return line.substr(index + 1);
+}
+
+string addAttributeSet(string line, set<int>& set, int id) {
+    int index = line.find_first_of(',');
+    if (convert(line.substr(0, index))) {
+        set.insert(id);
+    }
+
+    return line.substr(index + 1);
+
+}
+
+void ReadPeopleDataSet(const char* filePath, Sets& set) {
+
+    ifstream file(filePath);
+    //fstream file("legoList_Marvel.txt", ios_base::in);
+
+    if (file.is_open()) {
+        string lineFromFile;
+        string firstLine;
+
+        // get title line, not important
+        getline(file, firstLine);
+
+        while (!file.eof()) {
+            // 1. get Line
+            getline(file, lineFromFile);
+
+            string line;
+
+            // 2. find location of the comma and split into two pieces based on comma location
+
+            int index = lineFromFile.find_first_of(',');
+            int id = stoi(lineFromFile.substr(0, index));
+            line = lineFromFile.substr(index + 1);
+
+            //insert into set with all ids
+            set.all.insert(id);
+
+            //insert into correct set based off trait
+            line = addAttributeSet(line, set.fiveOclock, id);
+            line = addAttributeSet(line, set.archedEyebrows, id);
+            line = addAttributeSet(line, set.attractive, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.bald, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.bigLips, id);
+            line = addAttributeSet(line, set.bigNose, id);
+            line = addAttributeSet(line, set.blackHair, id);
+            line = addAttributeSet(line, set.blondeHair, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.brownHair, id);
+            line = addAttributeSet(line, set.bushyEyebrows, id);
+            line = addAttributeSet(line, set.chubby, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.eyeGlasses, id);
+            line = addAttributeSet(line, set.goatee, id);
+            line = addAttributeSet(line, set.greyHair, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.highCheekbones, id);
+            line = addAttributeSet(line, set.male, id);
+            line = skip(line);
+            line = addAttributeSet(line, set.mustache, id);
+            line = addAttributeSet(line, set.narrowEyes, id);
+            line = addAttributeSet(line, set.noBeard, id);
+            line = addAttributeSet(line, set.ovalFace, id);
+            line = addAttributeSet(line, set.pale, id);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = addAttributeSet(line, set.straightHair, id);
+            line = addAttributeSet(line, set.wavyHair, id);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            //for last attribute (young)
+            if (convert(line.substr(0, 1))) {
+                set.young.insert(id);
+            }
+            line = line.substr(0 + 1);
+            //line = addAttributeSet(line, set.young, id);
+
+        }
+    }
+}
+
+map<int, Person> ReadPeopleData(const char* filePath, map<int, Person>& persons) {
+
+    ifstream file(filePath);
+
+    if (file.is_open()) {
+        string lineFromFile;
+        string firstLine;
+
+        // get title line, not important
+        getline(file, firstLine);
+
+        while (!file.eof()) {
+            // 1. get Line
+            getline(file, lineFromFile);
+
+            Person tempPerson;
+            string line;
+
+            // 2. find location of the comma and split into two pieces based on comma location
+
+            int index = lineFromFile.find_first_of(',');
+            tempPerson.id = stoi(lineFromFile.substr(0, index));
+            line = lineFromFile.substr(index + 1);
+
+            line = getAttribute(line, tempPerson.fiveOclock);
+            line = getAttribute(line, tempPerson.archedEyebrows);
+            line = getAttribute(line, tempPerson.attractive);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.bald);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.bigLips);
+            line = getAttribute(line, tempPerson.bigNose);
+            line = getAttribute(line, tempPerson.blackHair);
+            line = getAttribute(line, tempPerson.blondeHair);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.brownHair);
+            line = getAttribute(line, tempPerson.bushyEyebrows);
+            line = getAttribute(line, tempPerson.chubby);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.eyeGlasses);
+            line = getAttribute(line, tempPerson.goatee);
+            line = getAttribute(line, tempPerson.greyHair);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.highCheekbones);
+            line = getAttribute(line, tempPerson.male);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.mustache);
+            line = getAttribute(line, tempPerson.narrowEyes);
+            line = getAttribute(line, tempPerson.noBeard);
+            line = getAttribute(line, tempPerson.ovalFace);
+            line = getAttribute(line, tempPerson.pale);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = getAttribute(line, tempPerson.straightHair);
+            line = getAttribute(line, tempPerson.wavyHair);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            line = skip(line);
+            tempPerson.young = convert(line.substr(0, 1));
+            line = line.substr(0 + 1);
+            //line = getAttribute(line, tempPerson.young);
+
+            // add tempPerson to linkedList
+            persons[tempPerson.id] = tempPerson;
+
+        }
+    }
+    return persons;
+}
+
+void printImage(vector<int> ids) {
+
+    vector<string> windows;
+    for (int i = 0; i < ids.size(); i++) {
+        string id = to_string(ids[i]);
+        while (id.length() < 6) {
+            id = "0" + id;
+        }
+        // Read the image file
+        //string imageNum = "000001";
+        string imageName = "img_align_celeba/" + id + ".jpg";
+        Mat image1 = imread(imageName);
+
+        // Check for failure
+        if (image1.empty())
+        {
+            cout << "Could not open or find the image" << endl;
+            cin.get(); //wait for any key press
+        }
+
+        String windowName = "Your celebrity look alike #" + to_string(i + 1); //Name of the window
+
+        windows.push_back(windowName);
+
+        namedWindow(windowName, WINDOW_AUTOSIZE); // Create a window
+        resize(image1, image1, Size(450, 500));
+
+
+        imshow(windowName, image1); // Show our image inside the created window.
+        moveWindow(windowName, 450 * i, 0);
+    }
+    waitKey(0); // Wait for any keystroke in the window
+
+    for (int j = 0; j < windows.size();j++) {
+        destroyWindow(windows[j]); //destroy the created window
+    }
+}
+
+set<int> filterSet(bool trait, set<int>& filtered, set<int>& attribute) {
+    set<int> out;
+
+    if (trait) {
+        set_intersection(filtered.begin(), filtered.end(), attribute.begin(), attribute.end(), inserter(out, out.begin()));
+    }
+    else {
+        set_difference(filtered.begin(), filtered.end(), attribute.begin(), attribute.end(), inserter(out, out.begin()));
+    }
+
+    return out;
+}
+
+
+vector<int> useSets(Person user) {
+    //measureing time
+    auto start = high_resolution_clock::now();
+
+    Sets traits;
+    ReadPeopleDataSet("list_attr_celeba.csv", traits);
+
+    set<int> filtered = traits.all;
+    set<int> out;
+
+    //making sure the correct gender and age is chosen
+    out = filterSet(user.male, filtered, traits.male);
+    filtered = out;
+
+    out = filterSet(user.young, filtered, traits.young);
+    filtered = out;
+
+    //making sure size at least 1
+    out = filterSet(user.pale, filtered, traits.pale);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+
+    out = filterSet(user.bigNose, filtered, traits.bigNose);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.attractive, filtered, traits.attractive);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.brownHair, filtered, traits.brownHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }out = filterSet(user.blackHair, filtered, traits.blackHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.blondeHair, filtered, traits.blondeHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.greyHair, filtered, traits.greyHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.bald, filtered, traits.bald);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.noBeard, filtered, traits.noBeard);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.mustache, filtered, traits.mustache);
+    if (out.size() > 0) {
+        filtered = out;
+    }out = filterSet(user.fiveOclock, filtered, traits.fiveOclock);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.goatee, filtered, traits.goatee);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.wavyHair, filtered, traits.wavyHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.straightHair, filtered, traits.straightHair);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.bushyEyebrows, filtered, traits.bushyEyebrows);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.archedEyebrows, filtered, traits.archedEyebrows);
+    if (out.size() > 0) {
+        filtered = out;
+    }out = filterSet(user.bigLips, filtered, traits.bigLips);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.chubby, filtered, traits.chubby);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.eyeGlasses, filtered, traits.eyeGlasses);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.narrowEyes, filtered, traits.narrowEyes);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.highCheekbones, filtered, traits.highCheekbones);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+    out = filterSet(user.ovalFace, filtered, traits.ovalFace);
+    if (out.size() > 0) {
+        filtered = out;
+    }
+
+    vector<int> ids;
+    for (auto it = filtered.begin(); it != filtered.end() && ids.size() < 3; it++) {
+        ids.push_back(*it);
+    }
+    //stop clock without measuring time it takes to output pictures
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << "\nSets execution time: " << duration.count() << " milliseconds." << endl;
+
+    return ids;
+}
+
+vector<int> useMap(Person user) {
+
+
+    //measureing time
+    auto start = high_resolution_clock::now();
+
+    map<int, Person> persons;
+    ReadPeopleData("list_attr_celeba.csv", persons);
+
+    //filter for gender
+    map<int, Person> preFilter;
+    for (auto it = persons.begin(); it != persons.end(); it++) {
+        if (user.male == it->second.male && user.young == it->second.young) {
+            preFilter.insert(*it);
+        }
+    }
+    //give a score based on similarity and return highest scoring pictures
+    map<int, Person> matches;
+    int max = 0;
+    for (auto it = preFilter.begin(); it != preFilter.end(); it++) {
+        int userScore = 0;
+        if (user.pale == it->second.pale) {
+            userScore++;
+        }
+        if (user.bigNose == it->second.bigNose) {
+            userScore++;
+        }
+        if (user.attractive == it->second.attractive) {
+            userScore++;
+        }
+        if (user.brownHair == it->second.brownHair) {
+            userScore++;
+        }
+        if (user.blackHair == it->second.blackHair) {
+            userScore++;
+        }
+        if (user.blondeHair == it->second.blondeHair) {
+            userScore++;
+        }
+        if (user.greyHair == it->second.greyHair) {
+            userScore++;
+        }
+        if (user.bald == it->second.bald) {
+            userScore++;
+        }
+        if (user.noBeard == it->second.noBeard) {
+            userScore++;
+        }
+        if (user.mustache == it->second.mustache) {
+            userScore++;
+        }
+        if (user.fiveOclock == it->second.fiveOclock) {
+            userScore++;
+        }
+        if (user.goatee == it->second.goatee) {
+            userScore++;
+        }
+        if (user.wavyHair == it->second.wavyHair) {
+            userScore++;
+        }
+        if (user.straightHair == it->second.straightHair) {
+            userScore++;
+        }
+        if (user.bushyEyebrows == it->second.bushyEyebrows) {
+            userScore++;
+        }
+        if (user.archedEyebrows == it->second.archedEyebrows) {
+            userScore++;
+        }
+        if (user.bigLips == it->second.bigLips) {
+            userScore++;
+        }
+        if (user.chubby == it->second.chubby) {
+            userScore++;
+        }
+        if (user.eyeGlasses == it->second.eyeGlasses) {
+            userScore++;
+        }
+        if (user.narrowEyes == it->second.narrowEyes) {
+            userScore++;
+        }
+        if (user.highCheekbones == it->second.highCheekbones) {
+            userScore++;
+        }
+        if (user.ovalFace == it->second.ovalFace) {
+            userScore++;
+        }
+
+        //if there is a new max score , clear the list and add the person
+        if (userScore > max) {
+            max = userScore;
+            matches.clear();
+            matches.insert(*it);
+            //if the score is equal to the max add it to the list
+        }
+        else if (userScore == max) {
+            matches.insert(*it);
+        }
+
+    }
+
+    // getting three ids from matches
+    vector<int>ids;
+    for (auto it = matches.begin(); it != matches.end() && ids.size() < 3; it++) {
+        ids.push_back(it->first);
+
+    }
+
+    //stop clock without measuring time it takes to output pictures
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << "\nMaps execution time: " << duration.count() << " milliseconds." << endl;
+
+    return ids;
+}
+
+int main() {
+
+    Person user;
+
+    //intro
+    cout << "\nWelcome to Face me bro" << endl;
+    cout << "Answer the following questions to find celebrities that you look similar to!" << endl;
+    cout << endl;
+
+    // survey
+    cout << "Select a data structure to use: \n1.Set \n2.Maps" << endl;
+    int option;
+    cin >> option;
+
+    cout << "What is your gender? \n1.Male \n2.Female" << endl;
+    int gender;
+    cin >> gender;
+    if (gender == 1) {
+        user.male = true;
+    }
+    else {
+        user.male = false;
+    }
+
+    cout << "Are you young? \n1.Yes \n2.No" << endl;
+    int young1;
+    cin >> young1;
+    if (young1 == 1) {
+        user.young = true;
+    }
+    else {
+        user.young = false;
+    }
+
+    cout << "Are you Pale? \n1.Yes \n2.No" << endl;
+    int pale1;
+    cin >> pale1;
+    if (pale1 == 1) {
+        user.pale = true;
+    }
+    else {
+        user.pale = false;
+    }
+
+    cout << "Do you have a big Nose? \n1.Yes \n2.No" << endl;
+    int bigNose1;
+    cin >> bigNose1;
+    if (bigNose1 == 1) {
+        user.bigNose = true;
+    }
+    else {
+        user.bigNose = false;
+    }
+
+    cout << "Are you attractive? \n1.Yes \n2.No" << endl;
+    int attractive1;
+    cin >> attractive1;
+    if (attractive1 == 1) {
+        user.attractive = true;
+    }
+    else {
+        user.attractive = false;
+    }
+
+    cout << "What color is you hair? \n1.Brown \n2.Black \n3.Blonde \n4.grey \n5.Bald \n6.Other" << endl;
+    int hair;
+    cin >> hair;
+    if (hair == 1) {
+        user.brownHair = true;
+        user.blackHair = false;
+        user.blondeHair = false;
+        user.greyHair = false;
+        user.bald = false;
+    }
+    else if (hair == 2) {
+        user.brownHair = false;
+        user.blackHair = true;
+        user.blondeHair = false;
+        user.greyHair = false;
+        user.bald = false;
+    }
+    else if (hair == 3) {
+        user.brownHair = false;
+        user.blackHair = false;
+        user.blondeHair = true;
+        user.greyHair = false;
+        user.bald = false;
+    }
+    else if (hair == 4) {
+        user.brownHair = false;
+        user.blackHair = false;
+        user.blondeHair = false;
+        user.greyHair = true;
+        user.bald = false;
+    }
+    else if (hair == 5) {
+        user.brownHair = false;
+        user.blackHair = false;
+        user.blondeHair = false;
+        user.greyHair = false;
+        user.bald = true;
+    }
+    else {
+        user.brownHair = false;
+        user.blackHair = false;
+        user.blondeHair = false;
+        user.greyHair = false;
+        user.bald = false;
+    }
+
+    cout << "Describe your hair type? \n1.Wavy \n2.Straight \n3.Other" << endl;
+    int hairType;
+    cin >> hairType;
+    if (hairType == 1) {
+        user.wavyHair = true;
+        user.straightHair = false;
+    }
+    else if (hairType == 2) {
+        user.wavyHair = false;
+        user.straightHair = true;
+    }
+    else {
+        user.wavyHair = false;
+        user.straightHair = false;
+    }
+
+    if (gender == 1) {
+        cout << "Describe your facial hair? \n1.None \n2.Mustache \n3.Five o'clock shadow \n4.Goatee" << endl;
+        int beard;
+        cin >> beard;
+        if (beard == 1) {
+            user.noBeard = true;
+            user.mustache = false;
+            user.fiveOclock = false;
+            user.goatee = false;
+        }
+        else if (beard == 2) {
+            user.noBeard = false;
+            user.mustache = true;
+            user.fiveOclock = false;
+            user.goatee = false;
+        }
+        else if (beard == 3) {
+            user.noBeard = false;
+            user.mustache = false;
+            user.fiveOclock = true;
+            user.goatee = false;
+        }
+        else if (beard == 4) {
+            user.noBeard = false;
+            user.mustache = false;
+            user.fiveOclock = false;
+            user.goatee = true;
+        }
+    }
+    else {
+        user.noBeard = true;
+        user.mustache = false;
+        user.fiveOclock = false;
+        user.goatee = false;
+    }
+
+    cout << "Do you have high cheekbones? \n1.Yes \n2.No" << endl;
+    int cheek;
+    cin >> cheek;
+    if (cheek == 1) {
+        user.highCheekbones = true;
+    }
+    else {
+        user.highCheekbones = false;
+    }
+
+    cout << "Do you have an oval face? \n1.Yes \n2.No" << endl;
+    int face;
+    cin >> face;
+    if (face == 1) {
+        user.ovalFace = true;
+    }
+    else {
+        user.ovalFace = false;
+    }
+
+    cout << "Are you chubby? \n1.Yes \n2.No" << endl;
+    int chubby;
+    cin >> chubby;
+    if (chubby == 1) {
+        user.chubby = true;
+    }
+    else {
+        user.chubby = false;
+    }
+
+    cout << "Do you wear glasses? \n1.Yes \n2.No" << endl;
+    int glasses;
+    cin >> glasses;
+    if (glasses == 1) {
+        user.eyeGlasses = true;
+    }
+    else {
+        user.eyeGlasses = false;
+    }
+
+
+    cout << "Describe your eyebrows? \n1.Bushy \n2.Arched \n3.Other" << endl;
+    int eyebrows;
+    cin >> eyebrows;
+    if (eyebrows == 1) {
+        user.bushyEyebrows = true;
+        user.archedEyebrows = false;
+    }
+    else if (eyebrows == 2) {
+        user.bushyEyebrows = false;
+        user.archedEyebrows = true;
+    }
+    else {
+        user.bushyEyebrows = false;
+        user.archedEyebrows = false;
+    }
+
+    cout << "Do you have big lips? \n1.Yes \n2.No" << endl;
+    int bigLips;
+    cin >> bigLips;
+    if (bigLips == 1) {
+        user.bigLips = true;
+    }
+    else {
+        user.bigLips = false;
+    }
+
+    cout << "Do you have narrow eyes? \n1.Yes \n2.No" << endl;
+    int eyes;
+    cin >> eyes;
+    if (eyes == 1) {
+        user.narrowEyes = true;
+    }
+    else {
+        user.narrowEyes = false;
+    }
+
+    //finding the correct images
+    //using sets
+    if (option == 1) {
+        vector<int> ids = useSets(user);
+
+        //printing images
+        if (ids.size() > 0) {
+            cout << "\nDisplaying Images... \nPress any key to close images." << endl;
+            printImage(ids);
+        }
+        else {
+            cout << "There were no celebrities with these traits. " << endl;
+        }
+
+        //call to see the difference in execution time
+        vector<int> ids2 = useMap(user);
+
+        //using linked list
+    }
+    else {
+
+        vector<int> ids = useMap(user);
+
+        //printing images
+        if (ids.size() > 0) {
+            cout << "\nDisplaying Images... \nPress any key to close images." << endl;
+            printImage(ids);
+        }
+        else {
+            cout << "There were no celebrities with these traits. " << endl;
+        }
+        //call to see the difference in execution time
+        vector<int> ids2 = useSets(user);
+
+    }
+
+    return 0;
+}
