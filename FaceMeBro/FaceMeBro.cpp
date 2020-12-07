@@ -290,33 +290,36 @@ void printImage(vector<int> ids) {
         while (id.length() < 6) {
             id = "0" + id;
         }
-        // Read the image file
+
         //string imageNum = "000001";
         string imageName = "img_align_celeba/" + id + ".jpg";
         Mat image1 = imread(imageName);
 
-        // Check for failure
+        //check for fail
         if (image1.empty())
         {
-            cout << "Could not open or find the image" << endl;
-            cin.get(); //wait for any key press
+            cout << "could not find image" << endl;
+            cin.get();
         }
 
-        String windowName = "Your celebrity look alike #" + to_string(i + 1); //Name of the window
+        String windowName = "Your celebrity look alike #" + to_string(i + 1);
 
         windows.push_back(windowName);
 
-        namedWindow(windowName, WINDOW_AUTOSIZE); // Create a window
+        //make windoes and fill with image
+        namedWindow(windowName, WINDOW_AUTOSIZE);
         resize(image1, image1, Size(450, 500));
 
 
-        imshow(windowName, image1); // Show our image inside the created window.
+        imshow(windowName, image1);
+
         moveWindow(windowName, 450 * i, 0);
     }
-    waitKey(0); // Wait for any keystroke in the window
+    waitKey(0);
 
+    //after destroy windows
     for (int j = 0; j < windows.size();j++) {
-        destroyWindow(windows[j]); //destroy the created window
+        destroyWindow(windows[j]);
     }
 }
 
